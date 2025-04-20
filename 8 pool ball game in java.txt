@@ -1,0 +1,130 @@
+//TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
+// click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.List;
+
+public class PoolGame extends JPanel implements ActionListener {
+
+    // Game constants
+    private static final int WIDTH = 800;
+    private static final int HEIGHT = 600;
+    private static final int BALL_RADIUS = 15;
+
+    // List of balls in the game
+    private List<Ball> balls;
+
+    // Timer for animation
+    private Timer timer;
+
+    public PoolGame() {
+        balls = new ArrayList<>();
+
+        // Create the balls (1 cue ball and 4 colored balls)
+        balls.add(new Ball(300, 300, BALL_RADIUS, Color.WHITE)); // cue ball
+        balls.add(new Ball(200, 200, BALL_RADIUS, Color.RED));
+        balls.add(new Ball(400, 200, BALL_RADIUS, Color.YELLOW));
+        balls.add(new Ball(500, 200, BALL_RADIUS, Color.RED));
+        balls.add(new Ball(200, 400, BALL_RADIUS, Color.YELLOW));
+
+        // Set up timer for animation
+        timer = new Timer(1000 / 60, this); // 60 FPS
+        timer.start();
+
+        // Set up JFrame
+        JFrame frame = new JFrame("Simple 8 Ball Pool Game");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(WIDTH, HEIGHT);
+        frame.add(this);
+        frame.setVisible(true);
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        // Move balls
+        for (Ball ball : balls) {
+            ball.move();
+            ball.collideWithWalls(WIDTH, HEIGHT);
+            for (Ball otherBall : balls) {
+                if (ball != otherBall) {
+                    ball.collideWithBall(otherBall);
+                }
+            }
+        }
+
+        // Repaint the game
+        repaint();
+    }
+
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+
+        // Draw the pool table
+        g.setColor(new Color(0, 128, 0)); // Green color for pool table
+        g.fillRect(0, 0, WIDTH, HEIGHT);
+
+        // Draw balls
+        for (Ball ball : balls) {
+            ball.draw(g);
+        }
+    }
+
+    // Ball class to represent each ball
+    class Ball {
+        int x, y, radius;
+        int dx, dy;
+        Color color;
+
+        public Ball(int x, int y, int radius, Color color) {
+            this.x = x;
+            this.y = y;
+            this.radius = radius;
+            this.color = color;
+            this.dx = 0;
+            this.dy = 0;
+        }
+
+        // Move the ball based on velocity
+        public void move() {
+            x += dx;
+            y += dy;
+        }
+
+        // Draw the ball on the pool table
+        public void draw(Graphics g) {
+            g.setColor(color);
+            g.fillOval(x - radius, y - radius, 2 * radius, 2 * radius);
+        }
+
+        // Handle wall collisions (bouncing off the edges of the pool table)
+        public void collideWithWalls(int screenWidth, int screenHeight) {
+            if (x - radius <= 0 || x + radius >= screenWidth) {
+                dx = -dx;
+            }
+            if (y - radius <= 0 || y + radius >= screenHeight) {
+                dy = -dy;
+            }
+        }
+
+        // Handle ball-to-ball collisions
+        public void collideWithBall(Ball other) {
+            int distance = (int) Math.sqrt(Math.pow(this.x - other.x, 2) + Math.pow(this.y - other.y, 2));
+            if (distance < this.radius + other.radius) {
+                // Simple collision resolution (just bounce off each other)
+                dx = -dx;
+                dy = -dy;
+                other.dx = -other.dx;
+                other.dy = -other.dy;
+            }
+        }
+    }
+
+    public static void main(String[] args) {
+        // Start the game
+        new PoolGame();
+    }
+}
